@@ -27,6 +27,13 @@ go.work
 .env.local
 .env.production
 
+# Configuration files
+Roman.conf
+kabal.conf
+
+# SSH keys
+ssh-key-2026-03-06.key
+
 # Logs
 *.log
 debug_log.txt
