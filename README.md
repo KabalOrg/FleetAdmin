@@ -147,3 +147,16 @@ MIT License
 ## Підтримка
 
 Для питань та пропозицій створюйте issues в репозиторії.
+
+## 🍕 Підтримати проект (Donate)
+
+Якщо ця система допомогла вашому бізнесу або провайдеру пережити відключення світла, ви можете підтримати розвиток проекту:
+
+<a href="https://donatello.to/kabal_org" target="_blank">
+  <img src="https://img.shields.io/badge/Підтримати_на-Donatello-FF5722?style=for-the-badge" alt="Donatello">
+</a>
+
+
+<a href="https://send.monobank.ua/jar/Abc4m6jPBC" target="_blank">
+  <img src="https://img.shields.io/badge/Прямий_донат-Monobank-000000?style=for-the-badge" alt="Monobank">
+</a>
