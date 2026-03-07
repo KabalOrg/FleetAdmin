@@ -119,14 +119,13 @@ go run cmd/main.go
 - `POST /settings/import` - Імпорт БД
 
 ## Скриншоти інтерфейсу
+<img width="1916" height="933" alt="gitfleet" src="https://github.com/user-attachments/assets/c1be3854-7e6c-4d10-8d9a-252d5979961a" />
+<img width="1916" height="933" alt="gitfleet2" src="https://github.com/user-attachments/assets/0a94bae6-6d5e-4fef-b868-cb541140121b" />
+<img width="1916" height="933" alt="gitfleet3" src="https://github.com/user-attachments/assets/70f39c1e-91a4-4798-b582-4c4a42359ff3" />
+<img width="1916" height="933" alt="gitfleet4" src="https://github.com/user-attachments/assets/2ada0b93-3b93-46ba-b97c-2f57b77cadd5" />
+<img width="1916" height="933" alt="gitfleet5" src="https://github.com/user-attachments/assets/f0c81690-ba38-42ff-a22f-b987eccf70a2" />
 
-| Налаштування | Картка авто | Ремонти |
-|-------------|-------------|---------|
-| ![settings](docs/settings.png) | ![car_detail](docs/car_detail.png) | ![repairs](docs/repairs.png) |
 
-| Документи | Автопарк |
-|-----------|-----------|
-| ![documents](docs/documents.png) | ![fleet](docs/fleet.png) |
 
 ## Розробка
 
