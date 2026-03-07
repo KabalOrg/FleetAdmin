@@ -1,0 +1,167 @@
+{{ template "header.html" . }}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="flex items-center space-x-4 mb-2">
+        <div class="p-3 bg-indigo-500/10 rounded-2xl">
+            <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight">Налаштування системи</h1>
+        <div class="ml-auto">
+            <form action="/logout" method="POST" class="inline">
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl transition-all">
+                    Вийти
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{ if eq .msg "success_reset" }}
+    <div
+        class="glass p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-sm font-semibold mb-6 flex items-center">
+        <span class="mr-2">✅</span> Дані успішно скинуто та синхронізовано!
+    </div>
+    {{ end }}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Data Sync Section -->
+        <div
+            class="glass p-6 rounded-3xl border border-slate-700/50 hover:border-indigo-500/30 transition-all space-y-4">
+            <h2 class="text-xl font-bold text-slate-200 flex items-center">
+                <span class="mr-2">🔄</span> Синхронізація даних
+            </h2>
+            <p class="text-sm text-slate-400">Оновіть локальну базу даних із зовнішніх джерел або приведіть у порядок
+                існуючі записи.</p>
+            <div class="space-y-3 pt-2">
+                <a href="/sync"
+                    class="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl hover:bg-indigo-600/20 group transition-all border border-transparent hover:border-indigo-500/20">
+                    <span class="text-sm font-medium text-slate-300 group-hover:text-indigo-300">Google Sheets
+                        Sync</span>
+                    <svg class="w-5 h-5 text-slate-500 group-hover:text-indigo-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <button onclick="syncExecutors()"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl hover:bg-emerald-600/20 group transition-all border border-transparent hover:border-emerald-500/20 text-left">
+                    <span class="text-sm font-medium text-slate-300 group-hover:text-emerald-300">Синхронізувати
+                        виконавців</span>
+                    <svg class="w-5 h-5 text-slate-500 group-hover:text-emerald-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Maintenance Section -->
+        <div
+            class="glass p-6 rounded-3xl border border-slate-700/50 hover:border-indigo-500/30 transition-all space-y-4">
+            <h2 class="text-xl font-bold text-slate-200 flex items-center">
+                <span class="mr-2">🛠️</span> Обслуговування
+            </h2>
+            <p class="text-sm text-slate-400">Інструменти для підтримки цілісності даних.</p>
+            <div class="space-y-3 pt-2">
+                <div class="pt-4 border-t border-slate-700/50">
+                    <h3 class="text-sm font-semibold text-rose-400 mb-3">Небезпечна зона</h3>
+                    <a href="/repairs/reset"
+                        onclick="return confirm('УВАГА: Це видалить ВСІ поточні записи про ремонти та шини, а потім завантажить їх заново з Google Таблиці. Продовжити?')"
+                        class="w-full flex items-center justify-between p-4 bg-rose-600/10 rounded-2xl hover:bg-rose-600/20 group transition-all border border-rose-500/20">
+                        <div class="flex flex-col text-left">
+                            <span class="text-sm font-bold text-rose-300">Перезавантажити дані</span>
+                            <span class="text-[10px] text-rose-400/70 uppercase">Видалити все та синхронізувати з
+                                нуля</span>
+                        </div>
+                        <svg class="w-5 h-5 text-rose-500 group-hover:scale-110 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+
+                <a href="/settings/backup"
+                    class="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl hover:bg-amber-600/20 group transition-all border border-transparent hover:border-amber-500/20">
+                    <span class="text-sm font-medium text-slate-300 group-hover:text-amber-300">Бекап (.db)</span>
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                </a>
+
+                <div class="pt-4 border-t border-slate-700/50">
+                    <h3 class="text-sm font-semibold text-slate-400 mb-3">Імпорт бази даних</h3>
+                    <form action="/settings/import" method="POST" enctype="multipart/form-data" class="space-y-3"
+                        onsubmit="return confirm('УВАГА: Це замінить всі поточні дані! Продовжити?')">
+                        <div class="relative group">
+                            <input type="file" name="backup_file" accept=".db" required
+                                class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600/20 file:text-indigo-400 hover:file:bg-indigo-600/30 transition-all cursor-pointer">
+                        </div>
+                        <button type="submit"
+                            class="w-full flex items-center justify-center space-x-2 p-3 bg-slate-700/50 hover:bg-rose-600/20 text-slate-300 hover:text-rose-300 rounded-xl transition-all border border-transparent hover:border-rose-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                            <span class="text-xs font-bold uppercase tracking-wider">Відновити з файлу</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reminders Section -->
+        <div
+            class="glass p-6 rounded-3xl border border-slate-700/50 hover:border-indigo-500/30 transition-all space-y-4 md:col-span-2">
+            <h2 class="text-xl font-bold text-slate-200 flex items-center">
+                <span class="mr-2">🔔</span> Нагадування в Telegram
+            </h2>
+            <form action="/settings/update" method="POST" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-400">Нагадувати за (днів):</label>
+                        <input type="number" name="reminder_days" value="{{ .reminderDays }}"
+                            class="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-400">Час нагадування (HH:MM):</label>
+                        <input type="time" name="reminder_time" value="{{ .reminderTime }}"
+                            class="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-400">Telegram Chat IDs (через кому):</label>
+                        <input type="text" name="admin_chat_ids" value="{{ .adminIDs }}"
+                            class="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Наприклад: 1234567, 8877665">
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                    Зберегти налаштування
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function syncExecutors() {
+        if (!confirm('Додати всіх виконавців з історії ремонтів та резини до основного списку?')) return;
+
+        fetch('/executors/sync')
+            .then(response => response.json())
+            .then(data => {
+                alert('Синхронізація успішна! Додано нових: ' + data.added);
+            })
+            .catch(err => {
+                alert('Помилка при синхронізації');
+                console.error(err);
+            });
+    }
+</script>
+
+{{ template "footer.html" . }}

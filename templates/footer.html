@@ -1,0 +1,84 @@
+</div>
+</main>
+
+<!-- Table Sorting & Filtering Logic -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Table Filtering
+        const searchInput = document.getElementById('tableSearch');
+        const tbody = document.getElementById('tableBody');
+
+        if (searchInput && tbody) {
+            searchInput.addEventListener('input', function () {
+                const term = this.value.toLowerCase();
+                const rows = tbody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // 2. Table Sorting
+        const tables = document.querySelectorAll('.sortable-table');
+        tables.forEach(table => {
+            const headers = table.querySelectorAll('th.cursor-pointer');
+            const tBody = table.querySelector('tbody');
+
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    const isAsc = header.classList.contains('asc');
+                    const direction = isAsc ? -1 : 1;
+
+                    // Remove sort classes from all headers
+                    headers.forEach(h => {
+                        h.classList.remove('asc', 'desc');
+                        const span = h.querySelector('span');
+                        if (span) span.textContent = '↕';
+                    });
+
+                    // Add classes to clicked header
+                    header.classList.add(isAsc ? 'desc' : 'asc');
+                    const span = header.querySelector('span');
+                    if (span) span.textContent = isAsc ? '↓' : '↑';
+
+                    // Sort rows
+                    const rows = Array.from(tBody.querySelectorAll('tr'));
+
+                    rows.sort((a, b) => {
+                        const aCell = a.querySelectorAll('td')[index];
+                        const bCell = b.querySelectorAll('td')[index];
+
+                        if (!aCell || !bCell) return 0;
+
+                        // Use data-sort attribute if available (for dates/numbers), otherwise text
+                        const aVal = aCell.dataset.sort !== undefined ? aCell.dataset.sort : aCell.textContent.trim();
+                        const bVal = bCell.dataset.sort !== undefined ? bCell.dataset.sort : bCell.textContent.trim();
+
+                        // Check if numeric
+                        const aNum = parseFloat(aVal);
+                        const bNum = parseFloat(bVal);
+
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            return (aNum - bNum) * direction;
+                        }
+
+                        return aVal.localeCompare(bVal, 'uk') * direction;
+                    });
+
+                    // Re-append rows in sorted order
+                    tBody.innerHTML = '';
+                    rows.forEach(row => tBody.appendChild(row));
+                });
+            });
+        });
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+# Logs
+*.log
+crash_log.txt
+debug_log.txt
+server_log.txt
+test_log.txt
+curl_output.txt
+nohup.out
+
+# Database
+fleet.db
+
+# Binaries
+fleet-app
+fleet-app-debug
+main
+
+# Credentials (sensitive)
+credentials.json
+
+# SSH keys
+ssh-key-*.key
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Temporary files
+*.tmp
+*.swp

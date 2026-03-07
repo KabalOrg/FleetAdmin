@@ -1,0 +1,97 @@
+{{ template "header.html" . }}
+<div class="max-w-3xl mx-auto glass p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-2xl card-shadow">
+    <form action="{{ if .repair }}/repairs/edit/{{ .repair.ID }}{{ else }}/repairs/add{{ end }}" method="POST"
+        class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Авто (Номер)</label>
+                <input list="cars" name="car_number" value="{{ if .repair }}{{ .repair.CarNumber }}{{ end }}" required
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+                <datalist id="cars">
+                    {{ range .cars }}
+                    <option value="{{ .Number }}">{{ .Model }}</option>
+                    {{ end }}
+                </datalist>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Дата</label>
+                <input type="date" name="date" value="{{ if .repair }}{{ .repair.Date.Format "2006-01-02" }}{{ end }}"
+                    required
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Пробіг (км)</label>
+                <input type="number" name="mileage" value="{{ if .repair }}{{ .repair.Mileage }}{{ end }}" required
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Виконавець</label>
+                <input list="executors" name="executor" value="{{ if .repair }}{{ .repair.Executor }}{{ end }}"
+                    placeholder="— Почніть вводити або оберіть —"
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+                <datalist id="executors">
+                    {{ range .executors }}
+                    <option value="{{ .Name }}"></option>
+                    {{ end }}
+                </datalist>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Ціна (₴)</label>
+                <div class="space-y-3">
+                    <input type="text" name="price" id="price" value="{{ if .repair }}{{ .repair.Price }}{{ end }}"
+                        required placeholder="напр. 2500+1500"
+                        class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <div class="relative">
+                            <input type="checkbox" name="is_vat" class="hidden peer" {{ if .repair }}{{ if .repair.IsVAT
+                                }}checked{{ end }}{{ end }}>
+                            <div
+                                class="w-10 h-6 bg-slate-700 rounded-full peer peer-checked:bg-indigo-600 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
+                            </div>
+                        </div>
+                        <span
+                            class="text-sm font-medium text-slate-400 group-hover:text-slate-200 transition-colors">Ціна
+                            з ПДВ</span>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Примітки</label>
+                <input type="text" name="notes" value="{{ if .repair }}{{ .repair.Notes }}{{ end }}"
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-400 mb-2">Опис робіт</label>
+                <textarea name="description" required rows="3"
+                    class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">{{ if .repair }}{{ .repair.Description }}{{ end }}</textarea>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-4 pt-6">
+            <a href="/repairs"
+                class="px-6 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-slate-100 transition-colors">Скасувати</a>
+            <button type="submit"
+                class="px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+                {{ if .repair }}Оновити{{ else }}Додати{{ end }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('price').addEventListener('blur', function (e) {
+        const val = e.target.value;
+        if (val.includes('+')) {
+            try {
+                const normalized = val.replace(/,/g, '.');
+                const sum = normalized.split('+').reduce((acc, part) => acc + parseFloat(part.trim() || 0), 0);
+                if (!isNaN(sum)) {
+                    e.target.value = sum.toFixed(2);
+                }
+            } catch (err) {
+                console.error("Calculation error", err);
+            }
+        }
+    });
+</script>
+{{ template "footer.html" . }}

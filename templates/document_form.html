@@ -1,0 +1,48 @@
+{{ template "header.html" . }}
+<div class="max-w-2xl mx-auto glass p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl card-shadow">
+    <form action="{{ if .doc }}/documents/edit/{{ .doc.ID }}{{ else }}/documents/add{{ end }}" method="POST"
+        class="space-y-4">
+        <div>
+            <label class="block text-sm font-semibold text-slate-400 mb-2">Авто (Номер)</label>
+            <input list="cars" name="car_number" value="{{ if .doc }}{{ .doc.CarNumber }}{{ end }}" required
+                class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+            <datalist id="cars">
+                {{ range .cars }}
+                <option value="{{ .Number }}">{{ .Model }}</option>
+                {{ end }}
+            </datalist>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-slate-400 mb-2">Тип документа</label>
+            <select name="type" required
+                class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+                <option value="">— Оберіть тип —</option>
+                {{ range .docTypes }}
+                <option value="{{ .Name }}" {{ if $.doc }}{{ if eq $.doc.Type .Name }}selected{{ end }}{{ end }}>{{
+                    .Name }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-slate-400 mb-2">Дата видачі</label>
+            <input type="date" name="issue_date" value="{{ if .doc }}{{ .doc.IssueDate.Format " 2006-01-02" }}{{ end }}"
+                required
+                class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-slate-400 mb-2">Дійсний до</label>
+            <input type="date" name="expiry_date" value="{{ if .doc }}{{ .doc.ExpiryDate.Format " 2006-01-02" }}{{ end
+                }}" required
+                class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+        </div>
+        <div class="flex justify-end space-x-3 pt-4">
+            <a href="/documents"
+                class="px-6 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-100 transition-colors">Скасувати</a>
+            <button type="submit"
+                class="px-6 py-2 rounded-xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+                {{ if .doc }}Оновити{{ else }}Додати{{ end }}
+            </button>
+        </div>
+    </form>
+</div>
+{{ template "footer.html" . }}

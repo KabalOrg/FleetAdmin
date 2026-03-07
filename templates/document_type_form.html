@@ -1,0 +1,21 @@
+{{ template "header.html" . }}
+<div class="max-w-md mx-auto glass p-8 rounded-3xl shadow-2xl card-shadow">
+    <form action="{{ if .dt }}/document-types/edit/{{ .dt.ID }}{{ else }}/document-types/add{{ end }}" method="POST"
+        class="space-y-5">
+        <div>
+            <label class="block text-sm font-semibold text-slate-400 mb-2">Назва типу документа</label>
+            <input type="text" name="name" value="{{ if .dt }}{{ .dt.Name }}{{ end }}" required
+                placeholder="Наприклад: Страхування"
+                class="w-full bg-slate-800 border-slate-700 text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+            <a href="/document-types"
+                class="px-6 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-100 transition-colors">Скасувати</a>
+            <button type="submit"
+                class="px-6 py-2 rounded-xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all">
+                {{ if .dt }}Оновити{{ else }}Додати{{ end }}
+            </button>
+        </div>
+    </form>
+</div>
+{{ template "footer.html" . }}
