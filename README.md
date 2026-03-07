@@ -118,6 +118,16 @@ go run cmd/main.go
 - `GET /settings/backup` - Завантаження бекапу БД
 - `POST /settings/import` - Імпорт БД
 
+## Скриншоти інтерфейсу
+
+| Налаштування | Картка авто | Ремонти |
+|-------------|-------------|---------|
+| ![settings](docs/settings.png) | ![car_detail](docs/car_detail.png) | ![repairs](docs/repairs.png) |
+
+| Документи | Автопарк |
+|-----------|-----------|
+| ![documents](docs/documents.png) | ![fleet](docs/fleet.png) |
+
 ## Розробка
 
 ### Додавання нових функцій
