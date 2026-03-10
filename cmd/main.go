@@ -67,6 +67,14 @@ func main() {
 
 	// Setup sessions
 	store := cookie.NewStore([]byte("secret-key-change-in-production"))
+	store.Options(sessions.Options{
+		Path:     "/",
+		Domain:   "",
+		MaxAge:   86400 * 7, // 7 days
+		Secure:   false,     // Set to true if using HTTPS
+		HttpOnly: true,
+		SameSite: 0, // Default
+	})
 	r.Use(sessions.Sessions("admin-session", store))
 
 	// Load HTML templates
@@ -75,7 +83,9 @@ func main() {
 	// Auth middleware
 	authRequired := func(c *gin.Context) {
 		session := sessions.Default(c)
-		if session.Get("authenticated") != true {
+		auth := session.Get("authenticated")
+		log.Printf("Auth check: authenticated = %v", auth)
+		if auth != true {
 			c.Redirect(302, "/login")
 			c.Abort()
 			return
