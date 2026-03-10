@@ -18,7 +18,12 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+	} else {
+		log.Printf(".env file loaded successfully")
+	}
 
 	// Initialize Database
 	dbConn, err := db.InitDB("fleet.db")
@@ -149,12 +154,15 @@ func main() {
 		if adminPassword == "" {
 			adminPassword = "admin" // default for development
 		}
+		log.Printf("Login attempt: input password length %d, admin password: %s", len(password), adminPassword)
 		if password == adminPassword {
 			session := sessions.Default(c)
 			session.Set("authenticated", true)
 			session.Save()
+			log.Printf("Login successful, redirecting to /settings")
 			c.Redirect(302, "/settings")
 		} else {
+			log.Printf("Login failed: wrong password")
 			c.Redirect(302, "/login?error=Невірний пароль")
 		}
 	})
