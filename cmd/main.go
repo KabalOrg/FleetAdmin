@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 
+	"fleet-management/internal/backup"
 	"fleet-management/internal/bot"
 	"fleet-management/internal/db"
 	"fleet-management/internal/handlers"
@@ -38,7 +40,20 @@ func main() {
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken != "" {
 		tgBot := bot.StartBot(botToken)
+		bot.TgBot = tgBot
 		bot.StartReminderWorker(tgBot)
+
+		// Start backup worker
+		backupChatIDStr := os.Getenv("BACKUP_CHAT_ID")
+		if backupChatIDStr != "" {
+			if backupChatID, err := strconv.ParseInt(backupChatIDStr, 10, 64); err == nil {
+				go backup.StartBackupWorker(tgBot, "fleet.db", backupChatID)
+			} else {
+				log.Printf("Failed to parse BACKUP_CHAT_ID: %v", err)
+			}
+		} else {
+			log.Println("WARNING: BACKUP_CHAT_ID not set, backup worker will not start")
+		}
 	} else {
 		log.Println("WARNING: TELEGRAM_BOT_TOKEN not set, bot will not start")
 	}
@@ -154,6 +169,7 @@ func main() {
 	r.GET("/settings", authRequired, handlers.GetSettings)
 	r.POST("/settings/update", authRequired, handlers.UpdateSettings)
 	r.GET("/settings/backup", authRequired, handlers.DownloadBackup)
+	r.POST("/settings/send-backup", authRequired, handlers.SendBackupToTelegram)
 	r.POST("/settings/import", authRequired, handlers.ImportBackup)
 	r.GET("/executors/sync", authRequired, handlers.SyncExecutors)
 	r.GET("/repairs/reset", authRequired, handlers.ResetAndSync)

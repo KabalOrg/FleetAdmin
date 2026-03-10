@@ -1,16 +1,19 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"fleet-management/internal/backup"
+	"fleet-management/internal/bot"
+	"fleet-management/internal/db"
+	"fleet-management/internal/models"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"fleet-management/internal/db"
-	"fleet-management/internal/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -649,7 +652,7 @@ func UpdateSettings(c *gin.Context) {
 	db.SetSetting("reminder_time", reminderTime)
 	db.SetSetting("admin_chat_ids", adminIDs)
 
-	c.Redirect(303, "/settings")
+	c.Redirect(303, "/settings?msg=success")
 }
 
 // DownloadBackup allows downloading the SQLite database file
@@ -657,25 +660,98 @@ func DownloadBackup(c *gin.Context) {
 	c.FileAttachment("fleet.db", "fleet_backup_"+time.Now().Format("20060102_150405")+".db")
 }
 
-// ImportBackup handles uploading a database file to replace the current one
-func ImportBackup(c *gin.Context) {
-	file, err := c.FormFile("backup_file")
+// SendBackupToTelegram sends the database backup to Telegram
+func SendBackupToTelegram(c *gin.Context) {
+	chatIDStr := os.Getenv("BACKUP_CHAT_ID")
+	if chatIDStr == "" {
+		c.Redirect(303, "/settings?msg=error_no_chat_id")
+		return
+	}
+	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Помилка завантаження файлу")
+		c.Redirect(303, "/settings?msg=error_invalid_chat_id")
 		return
 	}
 
-	// Create a temp file
-	tempPath := filepath.Join(os.TempDir(), "imported_fleet.db")
+	log.Printf("Sending backup to chatID: %d", chatID)
+
+	// Log current DB counts before backup
+	var carsCount, repairsCount, tireChangesCount, executorsCount, documentsCount, documentTypesCount, settingsCount int64
+	db.DB.Model(&models.Car{}).Count(&carsCount)
+	db.DB.Model(&models.Repair{}).Count(&repairsCount)
+	db.DB.Model(&models.TireChange{}).Count(&tireChangesCount)
+	db.DB.Model(&models.Executor{}).Count(&executorsCount)
+	db.DB.Model(&models.Document{}).Count(&documentsCount)
+	db.DB.Model(&models.DocumentType{}).Count(&documentTypesCount)
+	db.DB.Model(&models.Setting{}).Count(&settingsCount)
+	log.Printf("DB counts before backup - Cars: %d, Repairs: %d, TireChanges: %d, Executors: %d, Documents: %d, DocumentTypes: %d, Settings: %d", carsCount, repairsCount, tireChangesCount, executorsCount, documentsCount, documentTypesCount, settingsCount)
+
+	err = backup.PerformBackupAndSend(bot.TgBot, "fleet.db", chatID)
+	if err != nil {
+		log.Printf("Manual backup failed: %v", err)
+		c.Redirect(303, "/settings?msg=error_backup")
+		return
+	}
+
+	c.Redirect(303, "/settings?msg=backup_sent")
+}
+func ImportBackup(c *gin.Context) {
+	log.Printf("Starting import backup")
+	file, err := c.FormFile("backup_file")
+	if err != nil {
+		log.Printf("Error getting form file: %v", err)
+		c.String(http.StatusBadRequest, "Помилка завантаження файлу")
+		return
+	}
+	log.Printf("File received: %s, size: %d", file.Filename, file.Size)
+
+	// Сохраняем временный файл в рабочей директории
+	tempPath := "imported_fleet.db"
+	log.Printf("Temp path: %s", tempPath)
 	if err := c.SaveUploadedFile(file, tempPath); err != nil {
+		log.Printf("Error saving uploaded file: %v", err)
 		c.String(http.StatusInternalServerError, "Помилка збереження тимчасового файлу")
 		return
+	}
+	log.Printf("File saved to temp")
+
+	// Check file size
+	if stat, err := os.Stat(tempPath); err == nil {
+		log.Printf("Saved file size: %d bytes", stat.Size())
+	} else {
+		log.Printf("Failed to stat file: %v", err)
+	}
+
+	// Compute MD5 hash
+	hash, err := computeMD5(tempPath)
+	if err != nil {
+		log.Printf("Warning: failed to compute MD5 for imported file: %v", err)
+	} else {
+		log.Printf("Imported file MD5: %s", hash)
+	}
+
+	// Check if file is a valid SQLite database
+	if isSQLite, err := isSQLiteFile(tempPath); err != nil {
+		log.Printf("Warning: failed to check if file is SQLite: %v", err)
+	} else if !isSQLite {
+		log.Printf("Error: imported file is not a valid SQLite database")
+		c.String(http.StatusBadRequest, "Завантажений файл не є коректною базою даних SQLite")
+		return
+	} else {
+		log.Printf("Imported file is a valid SQLite database")
 	}
 
 	// Replace database
 	if err := db.ReplaceDB(tempPath); err != nil {
+		log.Printf("Error replacing DB: %v", err)
 		c.String(http.StatusInternalServerError, "Помилка заміни бази даних: "+err.Error())
 		return
+	}
+	log.Printf("DB replaced successfully")
+
+	// Clean up temp file
+	if err := os.Remove(tempPath); err != nil {
+		log.Printf("Warning: failed to remove temp file %s: %v", tempPath, err)
 	}
 
 	c.Redirect(http.StatusSeeOther, "/settings?imported=true")
@@ -714,11 +790,15 @@ func SyncExecutors(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "added": count})
 }
 
-// ResetAndSync purges all repairs and tires, then runs a fresh sync
+// ResetAndSync purges all data (cars, repairs, tires, documents, executors, document_types), then runs a fresh sync
 func ResetAndSync(c *gin.Context) {
-	// 1. Purge repairs and tires (Unscoped to truly remove from soft-delete)
+	// 1. Purge all data (Unscoped to truly remove from soft-delete)
 	db.DB.Unscoped().Where("1 = 1").Delete(&models.Repair{})
 	db.DB.Unscoped().Where("1 = 1").Delete(&models.TireChange{})
+	db.DB.Unscoped().Where("1 = 1").Delete(&models.Document{})
+	db.DB.Unscoped().Where("1 = 1").Delete(&models.Car{})
+	db.DB.Unscoped().Where("1 = 1").Delete(&models.Executor{})
+	db.DB.Unscoped().Where("1 = 1").Delete(&models.DocumentType{})
 
 	// 2. Trigger sync
 	if err := db.SyncSheets(); err != nil {
@@ -727,4 +807,38 @@ func ResetAndSync(c *gin.Context) {
 	}
 
 	c.Redirect(303, "/settings?msg=success_reset")
+}
+func computeMD5(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+func isSQLiteFile(filePath string) (bool, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	header := make([]byte, 16)
+	n, err := file.Read(header)
+	if err != nil {
+		return false, err
+	}
+	if n < 16 {
+		return false, nil
+	}
+
+	// SQLite header starts with "SQLite format 3"
+	return string(header[:15]) == "SQLite format 3", nil
 }

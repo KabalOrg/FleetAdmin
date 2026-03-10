@@ -18,21 +18,26 @@
 go.work
 
 # Database files
+fleet.db
 *.db
 *.db-shm
 *.db-wal
 
-# Environment variables
+# Backup files
+backup_*.db
+
+# Environment files
 .env
 .env.local
 .env.production
 
 # Configuration files
+*.conf
 Roman.conf
 kabal.conf
 
 # SSH keys
-ssh-key-2026-03-06.key
+ssh-key-*.key
 
 # Logs
 *.log
@@ -42,8 +47,20 @@ test_log.txt
 crash_log.txt
 curl_output.txt
 
+# Credentials
+credentials.json
+
 # IDE files
 .vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
 .idea/
 
 # OS generated files

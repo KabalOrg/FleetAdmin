@@ -21,6 +21,7 @@ type BotState struct {
 }
 
 var userState = make(map[int64]*BotState)
+var TgBot *tgbotapi.BotAPI
 
 const (
 	StepIdle          = "idling"
@@ -375,6 +376,7 @@ func startTireFlow(bot *tgbotapi.BotAPI, chatID int64) {
 func showCarSelection(bot *tgbotapi.BotAPI, chatID int64, text string, step string) {
 	var cars []models.Car
 	db.DB.Find(&cars)
+	log.Printf("Found %d cars for selection", len(cars))
 
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, car := range cars {
@@ -383,6 +385,7 @@ func showCarSelection(bot *tgbotapi.BotAPI, chatID int64, text string, step stri
 		)
 		rows = append(rows, row)
 	}
+	log.Printf("Created %d rows for keyboard", len(rows))
 
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows...)

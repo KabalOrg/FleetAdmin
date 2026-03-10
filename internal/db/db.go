@@ -3,6 +3,7 @@ package db
 import (
 	"fmt" // Added for fmt.Errorf
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -113,34 +114,61 @@ func CloseDB() error {
 
 // ReplaceDB replaces the current database file with a new one
 func ReplaceDB(newPath string) error {
+	log.Printf("Starting ReplaceDB with newPath: %s", newPath)
+
 	// 1. Close current connection
 	if err := CloseDB(); err != nil {
+		log.Printf("Failed to close DB: %v", err)
 		return fmt.Errorf("failed to close database: %v", err)
 	}
+	log.Printf("DB closed")
 
 	// 2. Backup current (optional but safe)
 	_ = os.Rename("fleet.db", "fleet.db.bak")
+	log.Printf("Old DB backed up")
 
 	// 3. Move new file to fleet.db
 	source, err := os.Open(newPath)
 	if err != nil {
+		log.Printf("Failed to open source: %v", err)
 		return err
 	}
 	defer source.Close()
 
 	destination, err := os.Create("fleet.db")
 	if err != nil {
+		log.Printf("Failed to create destination: %v", err)
 		return err
 	}
 	defer destination.Close()
 
-	if _, err := io.Copy(destination, source); err != nil {
+	copied, err := io.Copy(destination, source)
+	if err != nil {
+		log.Printf("Failed to copy: %v", err)
 		return err
 	}
+	log.Printf("Copied %d bytes", copied)
 
 	// 4. Re-initialize
 	_, err = InitDB("fleet.db")
-	return err
+	if err != nil {
+		log.Printf("Failed to InitDB: %v", err)
+		return err
+	}
+	log.Printf("DB re-initialized successfully")
+
+	// Log counts to verify data restoration
+	var carsCount, repairsCount, tireChangesCount, executorsCount, documentsCount, documentTypesCount, settingsCount int64
+	DB.Model(&models.Car{}).Count(&carsCount)
+	DB.Model(&models.Repair{}).Count(&repairsCount)
+	DB.Model(&models.TireChange{}).Count(&tireChangesCount)
+	DB.Model(&models.Executor{}).Count(&executorsCount)
+	DB.Model(&models.Document{}).Count(&documentsCount)
+	DB.Model(&models.DocumentType{}).Count(&documentTypesCount)
+	DB.Model(&models.Setting{}).Count(&settingsCount)
+	log.Printf("Counts after replace - Cars: %d, Repairs: %d, TireChanges: %d, Executors: %d, Documents: %d, DocumentTypes: %d, Settings: %d", carsCount, repairsCount, tireChangesCount, executorsCount, documentsCount, documentTypesCount, settingsCount)
+
+	return nil
 }
 
 // EvaluatePrice calculates the total from a simple expression like "2500+1500"
