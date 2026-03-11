@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"os"
 	"strconv"
@@ -9,7 +10,9 @@ import (
 	"fleet-management/internal/bot"
 	"fleet-management/internal/db"
 	"fleet-management/internal/handlers"
+	"fleet-management/internal/installer"
 	"fleet-management/internal/models"
+	"fleet-management/templates"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -23,6 +26,20 @@ func main() {
 		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
 	} else {
 		log.Printf(".env file loaded successfully")
+	}
+
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if botToken == "" {
+		log.Println("Running web installer because TELEGRAM_BOT_TOKEN is missing")
+		if err := installer.Run(); err != nil {
+			log.Fatalf("Installer error: %v", err)
+		}
+		
+		// Reload .env after installer finishes
+		err = godotenv.Load()
+		if err != nil {
+			log.Fatalf("Failed to load .env after installation: %v", err)
+		}
 	}
 
 	// Initialize Database
@@ -42,22 +59,24 @@ func main() {
 	_ = db.ImportAll(".")
 
 	// Start Telegram Bot in goroutine
-	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken != "" {
 		tgBot := bot.StartBot(botToken)
-		bot.TgBot = tgBot
-		bot.StartReminderWorker(tgBot)
+		if tgBot != nil {
+			bot.TgBot = tgBot
+			bot.StartReminderWorker(tgBot)
 
-		// Start backup worker
-		backupChatIDStr := os.Getenv("BACKUP_CHAT_ID")
-		if backupChatIDStr != "" {
-			if backupChatID, err := strconv.ParseInt(backupChatIDStr, 10, 64); err == nil {
-				go backup.StartBackupWorker(tgBot, "fleet.db", backupChatID)
+			// Start backup worker
+			backupChatIDStr := os.Getenv("BACKUP_CHAT_ID")
+			if backupChatIDStr != "" {
+				if backupChatID, err := strconv.ParseInt(backupChatIDStr, 10, 64); err == nil {
+					go backup.StartBackupWorker(tgBot, "fleet.db", backupChatID)
+				} else {
+					log.Printf("Failed to parse BACKUP_CHAT_ID: %v", err)
+				}
 			} else {
-				log.Printf("Failed to parse BACKUP_CHAT_ID: %v", err)
+				log.Println("WARNING: BACKUP_CHAT_ID not set, backup worker will not start")
 			}
-		} else {
-			log.Println("WARNING: BACKUP_CHAT_ID not set, backup worker will not start")
 		}
 	} else {
 		log.Println("WARNING: TELEGRAM_BOT_TOKEN not set, bot will not start")
@@ -77,8 +96,9 @@ func main() {
 	})
 	r.Use(sessions.Sessions("admin-session", store))
 
-	// Load HTML templates
-	r.LoadHTMLGlob("templates/*")
+	// Load embedded HTML templates
+	templ := template.Must(template.ParseFS(templates.FS, "*.html"))
+	r.SetHTMLTemplate(templ)
 
 	// Auth middleware
 	authRequired := func(c *gin.Context) {

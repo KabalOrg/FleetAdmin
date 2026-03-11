@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Установка системы автопарка</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: var(--text);
+            text-align: center;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+            display: block;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .optional-section {
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+            padding-top: 20px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            margin: 0 4px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Настройка Системы</h2>
+    <p class="subtitle">Добро пожаловать! Пожалуйста, укажите базовые настройки для работы приложения.</p>
+
+    <form id="setupForm" action="/" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="TELEGRAM_BOT_TOKEN">Telegram Bot Token *</label>
+            <input type="text" id="TELEGRAM_BOT_TOKEN" name="TELEGRAM_BOT_TOKEN" required placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ">
+            <span class="help-text">Получите токен у @BotFather в Telegram</span>
+        </div>
+
+        <div class="form-group">
+            <label for="ADMIN_PASSWORD">Пароль Администратора</label>
+            <input type="text" id="ADMIN_PASSWORD" name="ADMIN_PASSWORD" value="admin" required>
+            <span class="help-text">Для входа в веб-интерфейс</span>
+        </div>
+
+        <div class="optional-section">
+            <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 15px;">Дополнительные настройки</h3>
+            
+            <div class="form-group">
+                <label for="AUTHORIZED_USER_IDS">ID Авторизованных Пользователей</label>
+                <input type="text" id="AUTHORIZED_USER_IDS" name="AUTHORIZED_USER_IDS" placeholder="12345,67890">
+                <span class="help-text">ID Telegram (через запятую), которые имеют доступ к боту</span>
+            </div>
+
+            <div class="form-group">
+                <label for="BACKUP_CHAT_ID">ID Чата для Бэкапов</label>
+                <input type="text" id="BACKUP_CHAT_ID" name="BACKUP_CHAT_ID" placeholder="-100... или ваш ID">
+                <span class="help-text">Куда бот будет отправлять бэкапы БД</span>
+            </div>
+
+            <div class="form-group">
+                <label for="PORT">Порт веб-сервера</label>
+                <input type="number" id="PORT" name="PORT" value="8080" required>
+            </div>
+
+            <div class="form-group">
+                <label for="databaseBackup">Восстановить из Бэкапа (необязательно)</label>
+                <input type="file" id="databaseBackup" name="databaseBackup" accept=".db,.sqlite">
+                <span class="help-text">Выберите файл fleet.db, если хотите восстановить старые данные</span>
+            </div>
+        </div>
+
+        <button type="submit" id="submitBtn">Сохранить и Запустить</button>
+        
+        <div class="loading" id="loadingIndicator">
+            Подождите, применяем настройки...
+            <br><br>
+            <span></span><span></span><span></span>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('setupForm').addEventListener('submit', function() {
+        document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'block';
+    });
+</script>
+
+</body>
+</html>

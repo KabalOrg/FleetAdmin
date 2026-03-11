@@ -49,7 +49,8 @@ const (
 func StartBot(token string) *tgbotapi.BotAPI {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Panic(err)
+		log.Printf("Failed to start bot (invalid token or network error): %v", err)
+		return nil
 	}
 
 	bot.Debug = true
